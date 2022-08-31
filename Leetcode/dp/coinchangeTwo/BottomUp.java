@@ -1,7 +1,5 @@
 package Leetcode.dp.coinchangeTwo;
 
-import java.util.*;
-
 public class BottomUp {
     private static int coinChange(int amount, int[] coins) {
         int N = coins.length;
