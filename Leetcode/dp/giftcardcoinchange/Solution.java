@@ -3,28 +3,34 @@ import java.util.*;
 
 public class Solution {
 
-    private static void dfs(double value, List<Map<String, Integer>> res, Set<String> memoSet, Map<String, Integer> currProducts, TreeMap<String, Double> products) {
-        if(value < 0.0 || memoSet.contains(currProducts.toString())) return;
+    private static Map<String, Integer> dfs(double value, Set<String> memoSet, Map<String, Integer> currProducts, TreeMap<Double, List<String>> products) {
+        if(value < 0.0 || memoSet.contains(currProducts.toString())) return null;
         if(value == 0.0) {
-            res.add(currProducts);
-            return;
+            return currProducts;
         }
-        for(Map.Entry<String, Double> prod: products.entrySet()) {
-            double price = prod.getValue();
+        for(Map.Entry<Double, List<String>> prod: products.entrySet()) {
+            double price = prod.getKey();
             if(value - price >= 0.0) {
-                Map<String, Integer> currProductCopy = new HashMap<>(currProducts);
-                currProductCopy.put(prod.getKey(), currProductCopy.getOrDefault(prod.getKey(), 0)+1);
-                dfs(value - price, res, memoSet, currProductCopy, products);
-                memoSet.add(currProductCopy.toString());
+                for(String prodName: prod.getValue()) {
+                    Map<String, Integer> currProductCopy = new HashMap<>(currProducts);
+                    currProductCopy.put(prodName, currProductCopy.getOrDefault(prodName, 0)+1);
+                    Map<String, Integer> resVal = dfs(value - price, memoSet, currProductCopy, products);
+                    if(resVal != null) return resVal;
+                    memoSet.add(currProductCopy.toString());
+                }
             }
         }
+        return null;
     }
 
-    public static List<Map<String, Integer>> giftCard(double value, Map<String, Double> products) {
-        List<Map<String, Integer>> res = new ArrayList<>();
-        final TreeMap<String, Double> catalog = new TreeMap<>(products);
-        dfs(value, res, new HashSet<>(), new HashMap<>(), catalog);
-        return res;
+    public static Map<String, Integer> giftCard(double value, Map<String, Double> products) {
+        final TreeMap<Double, List<String>> catalog = new TreeMap<>(Comparator.reverseOrder());
+        products.forEach((p, v) -> {
+            List<String> prods = catalog.getOrDefault(v, new ArrayList<>());
+            prods.add(p);
+            catalog.put(v, prods);
+        });
+        return dfs(value, new HashSet<>(), new HashMap<>(), catalog);
     }
 
     public static void main(String[] args) {
@@ -38,8 +44,8 @@ public class Solution {
             Map.entry("soup", 3.45),
             Map.entry("soda", 2.05)
         );
-        List<Map<String, Integer>> giftCards = giftCard(5.00, prices);
-        giftCards.forEach(c -> System.out.println(c));
+        Map<String, Integer> giftCards = giftCard(5.00, prices);
+        System.out.println(giftCards.toString());
     }
 
 }
